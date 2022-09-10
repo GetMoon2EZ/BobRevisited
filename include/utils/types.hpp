@@ -4,5 +4,6 @@
 
 
 typedef uint32_t dimension_t;
-// typedef float energy_t;
-typedef uint8_t energy_t;
+typedef dimension_t position_t;
+
+typedef float energy_t;

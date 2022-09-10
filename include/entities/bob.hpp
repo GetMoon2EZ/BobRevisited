@@ -27,9 +27,9 @@ public:
     } MOVE_HEURISTIC;
 
     Bob() = default;
-    Bob(uint32_t x, uint32_t y);
+    Bob(position_t x, position_t y);
 
-    void Move(uint32_t worldWidth, uint32_t worldHeight);
+    void Move(dimension_t worldWidth, dimension_t worldHeight);
     void Eat(Food &food);
 
     energy_t getEnergyLevel(void) const;
@@ -50,6 +50,6 @@ private:
     float size = 1;
     uint8_t memory = 0;
 
-    void MoveRandomly(uint32_t worldWidth, uint32_t worldHeight);
-    energy_t CalculateEnergyConsumption(uint32_t new_x, uint32_t new_y) const;
+    void MoveRandomly(dimension_t worldWidth, dimension_t worldHeight);
+    energy_t CalculateEnergyConsumption(position_t new_x, position_t new_y) const;
 };

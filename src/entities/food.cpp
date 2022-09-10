@@ -7,7 +7,7 @@
 
 const energy_t Food::FOOD_DEFAULT_ENERGY = (energy_t) 100;
 
-Food::Food(uint32_t _x, uint32_t _y): Entity(_x, _y)
+Food::Food(position_t _x, position_t _y): Entity(_x, _y)
 {}
 
 energy_t Food::Consume(energy_t amount)
@@ -22,7 +22,6 @@ energy_t Food::Consume(energy_t amount)
     }
     return consumed;
 }
-
 
 energy_t Food::getEnergy(void) const
 {

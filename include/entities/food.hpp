@@ -12,7 +12,7 @@ public:
     static const energy_t FOOD_DEFAULT_ENERGY;
 
     Food() = default;
-    Food(uint32_t x, uint32_t y);
+    Food(position_t x, position_t y);
 
     /**
      * @brief Try to consume a given amount of energy. 

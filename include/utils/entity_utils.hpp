@@ -2,5 +2,7 @@
 
 #include <cstdint>
 
+#include "utils/types.hpp"
 
-void getRandomCoordinates(uint32_t maxX, uint32_t maxY, uint32_t *x, uint32_t *y);
+
+void getRandomCoordinates(dimension_t maxX, dimension_t maxY, position_t *x, position_t *y);

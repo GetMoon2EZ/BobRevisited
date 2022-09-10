@@ -4,14 +4,15 @@
 #include <random>
 
 #include "utils/rng.hpp"
+#include "utils/types.hpp"
 
 
-void getRandomCoordinates(uint32_t max_x, uint32_t max_y, uint32_t *x, uint32_t *y)
+void getRandomCoordinates(dimension_t max_x, dimension_t max_y, position_t *x, position_t *y)
 {
     RandomNumberGenerator *rng = RandomNumberGenerator::GetInstance();
-    uint32_t random_x = static_cast<uint32_t>(rng->getRandomNumber());
-    uint32_t random_y = static_cast<uint32_t>(rng->getRandomNumber());
+    position_t random_x = static_cast<position_t>(rng->getRandomNumber());
+    position_t random_y = static_cast<position_t>(rng->getRandomNumber());
 
-    *x = random_x % max_x;
-    *y = random_y % max_y;
+    *x = random_x % static_cast<position_t>(max_x);
+    *y = random_y % static_cast<position_t>(max_y);
 }

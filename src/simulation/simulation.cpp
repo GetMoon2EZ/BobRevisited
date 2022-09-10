@@ -12,13 +12,13 @@
 #include "utils/rng.hpp"
 #include "display/console_display.hpp"
 
-Simulation::Simulation(uint32_t _worldSize)
+Simulation::Simulation(dimension_t _worldSize)
 {
     this->worldWidth = _worldSize;
     this->worldHeight = _worldSize;
 }
 
-Simulation::Simulation(uint32_t _worldWidth, uint32_t _worldHeight)
+Simulation::Simulation(dimension_t _worldWidth, dimension_t _worldHeight)
 {
     this->worldWidth = _worldWidth;
     this->worldHeight = _worldHeight;
@@ -32,7 +32,7 @@ int Simulation::Init(uint64_t _worldPopulation)
     // Create the bobs
     this->bobs = std::vector<Bob>(this->worldPopulation);
     for (uint64_t i = 0; i < this->worldPopulation; i++) {
-        uint32_t x = 0, y = 0;
+        position_t x = 0, y = 0;
         getRandomCoordinates(this->worldWidth, this->worldHeight, &x, &y);
         this->bobs[i].setCoordinates(x, y);
         std::cout << "[DEBUG] " << this->bobs[i] << std::endl;
@@ -135,7 +135,7 @@ void Simulation::SpawnFood()
     this->foods = std::vector<Food>(FOOD_PER_DAY);
 
     for (uint64_t i = 0; i < FOOD_PER_DAY; i++) {
-        uint32_t food_x = 0, food_y = 0;
+        position_t food_x = 0, food_y = 0;
         getRandomCoordinates(this->worldWidth, this->worldHeight, &food_x, &food_y);
         this->foods[i].setCoordinates(food_x, food_y);
     }
@@ -155,12 +155,12 @@ uint8_t Simulation::getTick(void) const
     return this->tick;
 }
 
-uint32_t Simulation::getWorldWidth(void) const
+dimension_t Simulation::getWorldWidth(void) const
 {
     return this->worldWidth;
 }
 
-uint32_t Simulation::getWorldHeight(void) const
+dimension_t Simulation::getWorldHeight(void) const
 {
     return this->worldHeight;
 }

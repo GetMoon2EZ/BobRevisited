@@ -6,6 +6,7 @@
 #include "simulation/simulation.hpp"
 #include "entities/bob.hpp"
 #include "entities/food.hpp"
+#include "utils/types.hpp"
 
 
 void ConsoleDisplay::ClearScreen()
@@ -17,15 +18,15 @@ void ConsoleDisplay::ClearScreen()
 
 void ConsoleDisplay::DisplayFrame(Simulation sim)
 {
-    uint32_t width = sim.getWorldWidth();
-    uint32_t height = sim.getWorldHeight();
+    dimension_t width = sim.getWorldWidth();
+    dimension_t height = sim.getWorldHeight();
 
     // worldHeight lines of worldWidth*2 chars + worldHeight of '\n'
     std::string buffer((height * width*2) + height - 1, '_');
 
     // Draw the grid in the buffer
-    for (uint32_t y = 0; y < height; y++) {
-        for (uint32_t x = 0; x < width; x++) {
+    for (dimension_t y = 0; y < height; y++) {
+        for (dimension_t x = 0; x < width; x++) {
             buffer[y * height * 2 + y + x * 2] = '|';
         }
         if (y)

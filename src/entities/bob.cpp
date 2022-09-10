@@ -2,6 +2,7 @@
 
 #include <iostream>
 #include <cstdint>
+#include <limits.h>
 
 #include "utils/rng.hpp"
 #include "entities/food.hpp"
@@ -11,7 +12,7 @@
 const energy_t Bob::BOB_ENERGY_DEFAULT = (energy_t) 100;
 const energy_t Bob::BOB_ENERGY_MAX = (energy_t) 200;
 
-Bob::Bob(uint32_t _x, uint32_t _y): Entity(_x, _y)
+Bob::Bob(position_t _x, position_t _y): Entity(_x, _y)
 {}
 
 energy_t Bob::getEnergyLevel(void) const
@@ -24,7 +25,7 @@ uint8_t Bob::getHP(void) const
     return this->hp;
 }
 
-void Bob::Move(uint32_t world_width, uint32_t world_height)
+void Bob::Move(dimension_t world_width, dimension_t world_height)
 {
     switch (this->moveHeuristic) {
         case MOVE_HEURISTIC_RANDOM:
@@ -40,20 +41,20 @@ void Bob::Eat(Food &food)
     this->energyLevel += food.Consume(std::min(max_can_eat, food_energy));
 }
 
-void Bob::MoveRandomly(uint32_t world_width, uint32_t world_height)
+void Bob::MoveRandomly(dimension_t world_width, dimension_t world_height)
 {
     // Pick a random direction
     RandomNumberGenerator *rng = RandomNumberGenerator::GetInstance();
     MOVE_DIRECTION direction = static_cast<MOVE_DIRECTION>(rng->getRandomNumber(0, static_cast<uint64_t>(MOVE_DIRECTION_COUNT)));
 
-    uint32_t new_x = this->x, new_y = this->y;
+    position_t new_x = this->x, new_y = this->y;
     switch (direction) {
         case UP:
             if (new_y != 0)
                 new_y -= 1;
             break;
         case DOWN:
-            if (new_y != UINT32_MAX)
+            if (new_y != std::numeric_limits<position_t>::max())
                 new_y += 1;
             break;
         case LEFT:
@@ -61,7 +62,7 @@ void Bob::MoveRandomly(uint32_t world_width, uint32_t world_height)
                 new_x -= 1;
             break;
         case RIGHT:
-            if (new_x != UINT32_MAX)
+            if (new_x != std::numeric_limits<position_t>::max())
                 new_x += 1;
             break;
         default:
@@ -78,14 +79,14 @@ void Bob::MoveRandomly(uint32_t world_width, uint32_t world_height)
     }
 
     // Check map bounds 
-    if (new_x < world_width && new_y < world_height) {
+    if (new_x < static_cast<position_t>(world_width) && new_y < static_cast<position_t>(world_height)) {
         this->x = new_x;
         this->y = new_y;
     }
 
 }
 
-energy_t Bob::CalculateEnergyConsumption(uint32_t new_x, uint32_t new_y) const
+energy_t Bob::CalculateEnergyConsumption(position_t new_x, position_t new_y) const
 {
     energy_t energy_consumption = 0;
 
