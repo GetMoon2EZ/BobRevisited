@@ -2,12 +2,23 @@ set(TARGET ${PROJECT_NAME}.app)
 
 # Source files
 set(SOURCE_FILES
+    # Main
     main.cpp
-)
 
-# Include directories
-include_directories(
-    ../include/
+    # Simulation
+    simulation/simulation.cpp
+
+    # Entities
+    entities/entity.cpp
+    entities/bob.cpp
+    entities/food.cpp
+
+    # Utils
+    utils/entity_utils.cpp
+    utils/rng.cpp
+
+    # Display
+    display/console_display.cpp
 )
 
 add_executable(${TARGET} ${SOURCE_FILES})

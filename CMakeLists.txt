@@ -11,4 +11,9 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 # Executable output path
 set (CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR})
 
+# Include directories
+include_directories(
+    ./include/
+)
+
 add_subdirectory(src)

@@ -1,7 +1,12 @@
 #include <iostream>
 
+#include "simulation/simulation.hpp"
+
 int main()
 {
-    std::cout << "Hello world" << std::endl;
+    Simulation simulation = Simulation();
+    simulation.Init();
+    simulation.Run();
+    simulation.Cleanup();
     return 0;
 }
