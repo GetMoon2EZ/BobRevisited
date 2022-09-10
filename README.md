@@ -21,11 +21,16 @@ As I personally don't feel like coding this in Python, I will amend the instruct
 This is the current state of development. Note that some items might be amended in the future.
 
 * Logic
-    * [ ] Project architecture
-    * [ ] Implementation of simple logic
+    * [*] Project architecture
+    * [*] Implementation of simple logic
     * [ ] Addition of the different features
+      * [ ] Velocity
+      * [ ] Mass
+      * [ ] Perception
+      * [ ] Spacial memory
+      * [ ] Sexual reproduction
 * Rendering
-    * [ ] Output to console
+    * [*] Output to console
     * [ ] 2D rendering using Vulkan
     * [ ] Isometric view
     * [ ] 3D rendering
