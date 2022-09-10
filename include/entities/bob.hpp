@@ -43,7 +43,6 @@ public:
 
     energy_t getEnergyLevel(void) const;
     energy_t getEnergyMax(void) const;
-    uint8_t getHP(void) const;
     REPRODUCTION_MODE getReproductionMode(void) const;
 
     ~Bob() = default;
@@ -57,8 +56,6 @@ private:
     MOVE_HEURISTIC moveHeuristic = MOVE_HEURISTIC_RANDOM;
     REPRODUCTION_MODE reproductionMode = PARTHENOGENESIS;
 
-    uint8_t maxHp = 100;
-    uint8_t hp = 50;
     uint8_t speed = 1;
     float size = 1;
     uint8_t memory = 0;

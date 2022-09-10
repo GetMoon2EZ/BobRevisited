@@ -140,11 +140,6 @@ energy_t Bob::getEnergyMax(void) const
     return this->energyMax;
 }
 
-uint8_t Bob::getHP(void) const
-{
-    return this->hp;
-}
-
 Bob::REPRODUCTION_MODE Bob::getReproductionMode(void) const
 {
     return this->reproductionMode;
