@@ -12,6 +12,8 @@ class Bob: public Entity
 public:
     static const energy_t BOB_ENERGY_DEFAULT;
     static const energy_t BOB_ENERGY_MAX;
+    static const energy_t REPRODUCTION_COST;
+    static const energy_t NEW_BORN_ENERGY;
 
     typedef enum {
         UP = 0,
@@ -26,14 +28,23 @@ public:
         MOVE_HEURISTIC_RANDOM       // Bob moves randomly
     } MOVE_HEURISTIC;
 
+    typedef enum {
+        NO_REPRODUCTION,
+        PARTHENOGENESIS
+    } REPRODUCTION_MODE;
+
     Bob() = default;
     Bob(position_t x, position_t y);
+    Bob(position_t x, position_t y, energy_t energy);
 
     void Move(dimension_t worldWidth, dimension_t worldHeight);
     void Eat(Food &food);
+    void Reproduce();
 
     energy_t getEnergyLevel(void) const;
+    energy_t getEnergyMax(void) const;
     uint8_t getHP(void) const;
+    REPRODUCTION_MODE getReproductionMode(void) const;
 
     ~Bob() = default;
     friend std::ostream& operator<<(std::ostream& os, const Bob& bob);
@@ -42,7 +53,9 @@ private:
     energy_t energyLevel = BOB_ENERGY_DEFAULT;
     energy_t energyMax = BOB_ENERGY_MAX;
 
+    // Behavioral parameters
     MOVE_HEURISTIC moveHeuristic = MOVE_HEURISTIC_RANDOM;
+    REPRODUCTION_MODE reproductionMode = PARTHENOGENESIS;
 
     uint8_t maxHp = 100;
     uint8_t hp = 50;

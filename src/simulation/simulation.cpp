@@ -83,6 +83,7 @@ void Simulation::RunTick()
 {
     this->UpdateBobsPositions();
     this->MakeBobsEat();
+    this->CheckBobsReproduction();
 
     // Spawn food at the start of each day
     if ((this->tick % TICKS_PER_DAY) == 0) {
@@ -123,6 +124,33 @@ void Simulation::MakeBobsEat()
         }
     }
     this->foods = remaining_food;
+}
+
+void Simulation::CheckBobsReproduction()
+{
+    std::vector<Bob> new_born;
+
+    for (Bob &bob: this->bobs) {
+        switch (bob.getReproductionMode()) {
+            case Bob::NO_REPRODUCTION:
+                break;
+            case Bob::PARTHENOGENESIS:
+                // Reproduction condition: bob is at max energy
+                if (bob.getEnergyLevel() == bob.getEnergyMax()) {
+                    bob.Reproduce();
+                    new_born.push_back(Bob(bob.getX(), bob.getY(), Bob::NEW_BORN_ENERGY));
+                }
+                break;
+        }
+    }
+
+    // Add newly born Bobs to the population
+    for (Bob &bob: new_born) {
+        this->bobs.push_back(bob);
+    }
+
+    // Update world population
+    this->worldPopulation = this->bobs.size();
 }
 
 void Simulation::ClearFood()

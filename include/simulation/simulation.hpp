@@ -59,6 +59,7 @@ private:
     void RunTick();
     void UpdateBobsPositions();
     void MakeBobsEat();
+    void CheckBobsReproduction();
     void ClearFood();
     void SpawnFood();
 };

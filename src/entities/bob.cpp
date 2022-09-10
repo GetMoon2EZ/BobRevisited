@@ -11,18 +11,15 @@
 
 const energy_t Bob::BOB_ENERGY_DEFAULT = (energy_t) 100;
 const energy_t Bob::BOB_ENERGY_MAX = (energy_t) 200;
+const energy_t Bob::REPRODUCTION_COST = (energy_t) 150;
+const energy_t Bob::NEW_BORN_ENERGY = (energy_t) 50;
 
 Bob::Bob(position_t _x, position_t _y): Entity(_x, _y)
 {}
 
-energy_t Bob::getEnergyLevel(void) const
+Bob::Bob(position_t _x, position_t _y, energy_t _energy): Entity(_x, _y)
 {
-    return this->energyLevel;
-}
-
-uint8_t Bob::getHP(void) const
-{
-    return this->hp;
+    this->energyLevel = _energy;
 }
 
 void Bob::Move(dimension_t world_width, dimension_t world_height)
@@ -39,6 +36,17 @@ void Bob::Eat(Food &food)
     energy_t max_can_eat = this->energyMax - this->energyLevel;
     energy_t food_energy = food.getEnergy();
     this->energyLevel += food.Consume(std::min(max_can_eat, food_energy));
+    // if (max_can_eat > food_energy) {
+    //     this->energyLevel += food.Consume(food_energy);
+    // } else {
+    //     this->energyLevel = this->energyMax;
+    //     food.Consume(max_can_eat);
+    // }
+}
+
+void Bob::Reproduce()
+{
+    this->energyLevel -= Bob::REPRODUCTION_COST;
 }
 
 void Bob::MoveRandomly(dimension_t world_width, dimension_t world_height)
@@ -116,4 +124,28 @@ std::ostream& operator<<(std::ostream& out, const Bob& bob)
     out << "\tbob.y = " << static_cast<int>(bob.getY());
     out << "\tbob.energyLevel = " << static_cast<int>(bob.getEnergyLevel());
     return out;
+}
+
+/*****************************/
+/*          Getters          */
+/*****************************/
+
+energy_t Bob::getEnergyLevel(void) const
+{
+    return this->energyLevel;
+}
+
+energy_t Bob::getEnergyMax(void) const
+{
+    return this->energyMax;
+}
+
+uint8_t Bob::getHP(void) const
+{
+    return this->hp;
+}
+
+Bob::REPRODUCTION_MODE Bob::getReproductionMode(void) const
+{
+    return this->reproductionMode;
 }
