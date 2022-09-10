@@ -18,7 +18,7 @@ public:
     static const uint64_t DEFAULT_WORLD_POPULATION = 100;
     static constexpr std::chrono::milliseconds TICK_DURATION_MS = std::chrono::milliseconds( 100 );
     static const uint8_t TICKS_PER_DAY = 100;
-    static const uint16_t FOOD_PER_DAY = 200;
+    static const uint16_t FOOD_PER_DAY = 300;
 
     enum {
         SIMULATION_SUCCESS = 0,

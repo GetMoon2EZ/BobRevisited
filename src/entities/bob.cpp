@@ -11,8 +11,8 @@
 
 const energy_t Bob::BOB_ENERGY_DEFAULT = (energy_t) 100;
 const energy_t Bob::BOB_ENERGY_MAX = (energy_t) 200;
-const energy_t Bob::REPRODUCTION_COST = (energy_t) 150;
-const energy_t Bob::NEW_BORN_ENERGY = (energy_t) 50;
+const energy_t Bob::REPRODUCTION_COST = (energy_t) 100;
+const energy_t Bob::NEW_BORN_ENERGY = (energy_t) 100;
 
 Bob::Bob(position_t _x, position_t _y): Entity(_x, _y)
 {}
