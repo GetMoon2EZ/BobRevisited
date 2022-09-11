@@ -5,12 +5,34 @@
 #include <chrono>
 #include <string>
 #include <vector>
+#include <utility>
+#include <memory>
+#include <algorithm>
 
+#include "entities/entity.hpp"
 #include "entities/bob.hpp"
 #include "entities/food.hpp"
 #include "utils/entity_utils.hpp"
 #include "utils/rng.hpp"
 #include "display/console_display.hpp"
+
+
+/*****************************/
+/*   Simulation Parameters   */
+/*****************************/
+
+const dimension_t Simulation::DEFAULT_WORLD_WIDTH = 100;
+const dimension_t Simulation::DEFAULT_WORLD_HEIGHT = 100;
+const uint64_t Simulation::DEFAULT_WORLD_POPULATION = 100;
+const std::chrono::milliseconds Simulation::TICK_DURATION_MS = std::chrono::milliseconds( 200 );
+const uint8_t Simulation::TICKS_PER_DAY = 100;
+const uint16_t Simulation::FOOD_PER_DAY = 100;
+
+const float Simulation::VELOCITY_MUTATION_RATE = 0.0F; 
+
+/*****************************/
+/*       Constructors        */
+/*****************************/
 
 Simulation::Simulation(dimension_t _worldSize)
 {
@@ -24,18 +46,34 @@ Simulation::Simulation(dimension_t _worldWidth, dimension_t _worldHeight)
     this->worldHeight = _worldHeight;
 }
 
+/*****************************/
+/*       Public Methods      */
+/*****************************/
+
 int Simulation::Init(uint64_t _worldPopulation)
 {
     std::cout << "Simulation initialization" << std::endl;
-    this->worldPopulation = _worldPopulation;
+    
+    // Create the tiles
+    this->tiles = std::vector<std::vector<Tile>>();
+    for (dimension_t x = 0; x < this->worldWidth; x++) {
+        this->tiles.push_back(std::vector<Tile>());
+        for (dimension_t y = 0; y < this->worldHeight; y++) {
+            this->tiles[x].push_back(Tile(x, y));
+        }
+    }
 
     // Create the bobs
-    this->bobs = std::vector<Bob>(this->worldPopulation);
+    this->worldPopulation = _worldPopulation;
+    this->bobs = std::vector<std::shared_ptr<Bob>>();
     for (uint64_t i = 0; i < this->worldPopulation; i++) {
-        position_t x = 0, y = 0;
-        getRandomCoordinates(this->worldWidth, this->worldHeight, &x, &y);
-        this->bobs[i].setCoordinates(x, y);
-        std::cout << "[DEBUG] " << this->bobs[i] << std::endl;
+        position_t bob_x = 0, bob_y = 0;
+        getRandomCoordinates(this->worldWidth, this->worldHeight, &bob_x, &bob_y);
+        std::shared_ptr<Bob> p_bob = std::make_shared<Bob>(bob_x, bob_y);
+        if (p_bob) {
+            this->bobs.push_back(std::move(p_bob));
+            std::cout << "[DEBUG] " << *(this->bobs[i]) << std::endl;
+        }
     }
 
     // Create the food for the first day
@@ -81,91 +119,152 @@ void Simulation::Cleanup()
 
 void Simulation::RunTick()
 {
-    this->UpdateBobsPositions();
-    this->MakeBobsEat();
-    this->CheckBobsReproduction();
+    // Bobs need to be sorted by speed
+    // std::sort(this->bobs.begin(), this->bobs.end());
 
-    // Spawn food at the start of each day
+    this->UpdateBobsPositions();
+
+    // Cleanup dead or empty entities
+    this->CleanupDeadBobs();
+    this->CleanupEmptyFoods();
+
+    // Clear old food and spawn new food at the start of each day
     if ((this->tick % TICKS_PER_DAY) == 0) {
         this->ClearFood();
         this->SpawnFood();
     }
 }
 
+/*****************************/
+/*      Private Methods      */
+/*****************************/
+
 void Simulation::UpdateBobsPositions()
 {
-    std::vector<Bob> survivors;
-    for (Bob &bob: this->bobs) {
-        bob.Move(this->worldWidth, this->worldHeight);
-        if (bob.getEnergyLevel() > 0) {
-            survivors.push_back(bob);
-        }
-    }
+    for (std::shared_ptr<Bob> p_bob: this->bobs) {
+        if (!p_bob)
+            continue;
+        // Total amount moved, needed for energy consumption calculation
+        float total_moved = 0;
+        // Maximum number of moves (equal to velocity)
+        float nb_move = p_bob->getVelocity();
+        while (nb_move > 0) { // While Bob can move during current tick
+            // std::cout << "[DEBUG] " << *p_bob << std::endl;
 
-    // Update population
-    this->bobs = survivors;
-    this->worldPopulation = this->bobs.size();
-}
+            float moved = 0;
+            float move_amount = std::min(nb_move, 1.0F);
+            // std::cout << "[DEBUG] move_amount = " << move_amount << std::endl;
 
-void Simulation::MakeBobsEat()
-{
-    for (Bob &bob: this->bobs) {
-        for (Food &food: this->foods) {
-            if (bob.HasSameCoordinates(food)) {
-                bob.Eat(food);
+            // Try to move by the current move amount
+            // Move will return the actual amount that bob has moved
+            moved = p_bob->Move(this->worldWidth, this->worldHeight, move_amount);
+
+            Tile new_tile = this->tiles[p_bob->getX()][p_bob->getY()];
+
+            // If there is food on the tile then eat it
+            std::shared_ptr<Food> p_food = new_tile.getPFood();
+            if (p_food != nullptr) {
+                p_bob->Eat(p_food, moved * 100);
             }
-        }
-    }
 
-    std::vector<Food> remaining_food;
-    for (Food &food: this->foods) {
-        if (food.getEnergy() > 0) {
-            remaining_food.push_back(food);
+            total_moved += moved;
+            nb_move -= move_amount;
+        }
+
+        // std::cout << "[DEBUG] " << *p_bob << std::endl;
+        this->CheckBobReproduction(p_bob);
+
+        // std::cout << "[DEBUG] " << bob << std::endl;
+        // std::cout << "[DEBUG] " << total_moved << std::endl;
+        // Energy is updated after every move is done
+        energy_t consumed = p_bob->CalculateEnergyConsumption(total_moved);
+        // std::cout << "[DEBUG] consumed = " << consumed << std::endl; 
+        if (consumed < p_bob->getEnergyLevel()) {
+            p_bob->setEnergyLevel(p_bob->getEnergyLevel() - consumed);
+        } else {
+            p_bob->Die();
         }
     }
-    this->foods = remaining_food;
 }
 
-void Simulation::CheckBobsReproduction()
+void Simulation::CheckBobReproduction(std::shared_ptr<Bob> p_bob)
 {
-    std::vector<Bob> new_born;
+    RandomNumberGenerator *rng = RandomNumberGenerator::GetInstance();
 
-    for (Bob &bob: this->bobs) {
-        switch (bob.getReproductionMode()) {
-            case Bob::NO_REPRODUCTION:
-                break;
-            case Bob::PARTHENOGENESIS:
-                // Reproduction condition: bob is at max energy
-                if (bob.getEnergyLevel() == bob.getEnergyMax()) {
-                    bob.Reproduce();
-                    new_born.push_back(Bob(bob.getX(), bob.getY(), Bob::NEW_BORN_ENERGY));
-                }
-                break;
-        }
-    }
-
-    // Add newly born Bobs to the population
-    for (Bob &bob: new_born) {
-        this->bobs.push_back(bob);
+    switch (p_bob->getReproductionMode()) {
+        case Bob::NO_REPRODUCTION:
+            break;
+        case Bob::PARTHENOGENESIS:
+            // Reproduction condition: bob is at max energy
+            if (p_bob->getEnergyLevel() == p_bob->getEnergyMax()) {
+                p_bob->Reproduce();
+                float velocity = rng->getRandomFloat(p_bob->getVelocity() - VELOCITY_MUTATION_RATE, p_bob->getVelocity() + VELOCITY_MUTATION_RATE);
+                std::cout << "[DEBUG] New BOB spawned from bob " << p_bob->getID() << std::endl; 
+                std::shared_ptr<Bob> p_new_bob = std::make_shared<Bob>(p_bob->getX(), p_bob->getY(), Bob::NEW_BORN_ENERGY, velocity);
+                if (p_new_bob)
+                    this->bobs.push_back(std::move(p_new_bob));
+            }
+            break;
     }
 
     // Update world population
     this->worldPopulation = this->bobs.size();
 }
 
+void Simulation::CleanupDeadBobs()
+{
+    this->bobs.erase(
+        std::remove_if(
+            this->bobs.begin(),
+            this->bobs.end(),
+            [](std::shared_ptr<Bob> p_bob){
+                return !p_bob || p_bob->getStatus() != Bob::ALIVE;
+            }
+        ),
+        this->bobs.end());
+
+    this->worldPopulation = bobs.size();
+}
+
+void Simulation::CleanupEmptyFoods()
+{
+    std::vector<std::shared_ptr<Food>> tmp;
+    for (std::shared_ptr<Food> p_food: this->foods) {
+        if (p_food->getEnergy() > 0) {
+            tmp.push_back(p_food);
+        } else {
+            this->tiles[p_food->getX()][p_food->getY()].RemoveFood();
+        }
+    }
+    this->foods = tmp;
+}
+
 void Simulation::ClearFood()
 {
+    // Remove food from tiles
+    for (std::shared_ptr<Food> p_food: this->foods) {
+        this->tiles[p_food->getX()][p_food->getY()].RemoveFood();
+    }
+    // Clear food vector
     this->foods.clear();
 }
 
 void Simulation::SpawnFood()
 {
-    this->foods = std::vector<Food>(FOOD_PER_DAY);
-
     for (uint64_t i = 0; i < FOOD_PER_DAY; i++) {
         position_t food_x = 0, food_y = 0;
         getRandomCoordinates(this->worldWidth, this->worldHeight, &food_x, &food_y);
-        this->foods[i].setCoordinates(food_x, food_y);
+
+        std::shared_ptr<Food> p_tile_food = this->tiles[food_x][food_y].getPFood();
+        if (p_tile_food != nullptr) {
+            // Add the food to the tile
+            p_tile_food->AddEnergy(Food::FOOD_DEFAULT_ENERGY);
+        } else {
+            // Create a new food pointer
+            std::shared_ptr<Food> p_food = std::make_shared<Food>(food_x, food_y);
+            this->tiles[food_x][food_y].setPFood(p_food);
+            this->foods.push_back(std::move(p_food));
+        }
     }
 }
 
@@ -198,12 +297,12 @@ uint64_t Simulation::getWorldPopulation(void) const
     return this->worldPopulation;
 }
 
-std::vector<Bob> Simulation::getBobs(void) const
+std::vector<std::shared_ptr<Bob>> Simulation::getBobs(void) const
 {
     return this->bobs;
 }
 
-std::vector<Food> Simulation::getFoods(void) const
+std::vector<std::shared_ptr<Food>> Simulation::getFoods(void) const
 {
     return this->foods;
 }

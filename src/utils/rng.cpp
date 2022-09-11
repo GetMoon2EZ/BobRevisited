@@ -1,6 +1,7 @@
 #include "utils/rng.hpp"
 
 #include <cstdint>
+#include <iostream>
 #include <random>
 #include <time.h>
 
@@ -28,10 +29,17 @@ uint64_t RandomNumberGenerator::getRandomNumber()
     return distr(this->eng);
 }
 
-uint64_t RandomNumberGenerator::getRandomNumber(uint64_t min, uint64_t max)
+uint64_t RandomNumberGenerator::getRandomNumber(uint64_t _min, uint64_t _max)
 {
     std::uniform_int_distribution<uint64_t> distr;
-    return (distr(this->eng) %( max - min)) + min;
+    return (distr(this->eng) % (_max - _min)) + _min;
+}
+
+float RandomNumberGenerator::getRandomFloat(float _min, float _max)
+{
+    std::uniform_real_distribution<float> distr;
+    // std::cout << "[DEBUG] RNG between :" << _min << " and " << _max << std::endl;
+    return _min + distr(this->eng) / (distr.max() / (_max - _min));
 }
 
 void RandomNumberGenerator::Cleanup(void) const

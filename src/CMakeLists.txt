@@ -10,6 +10,7 @@ set(SOURCE_FILES
 
     # Entities
     entities/entity.cpp
+    entities/tile.cpp
     entities/bob.cpp
     entities/food.cpp
 

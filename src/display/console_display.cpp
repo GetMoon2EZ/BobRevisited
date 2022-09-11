@@ -2,6 +2,7 @@
 
 #include <iostream>
 #include <vector>
+#include <memory>
 
 #include "simulation/simulation.hpp"
 #include "entities/bob.hpp"
@@ -34,19 +35,20 @@ void ConsoleDisplay::DisplayFrame(Simulation sim)
     }
 
     // Draw a F for each piece of food
-    const std::vector<Food> &foods = sim.getFoods();
-    for (const Food &food: foods) {
-        buffer[(food.getY() * height) * 2 + food.getY() + food.getX() * 2 + 1] = 'F';
+    const std::vector<std::shared_ptr<Food>> p_foods = sim.getFoods();
+    for (std::shared_ptr<Food> p_food: p_foods) {
+        buffer[(p_food->getY() * height) * 2 + p_food->getY() + p_food->getX() * 2 + 1] = 'F';
     }
 
     // Draw a B for each bob in the grid
-    const std::vector<Bob> &bobs = sim.getBobs();
-    for (const Bob &bob: bobs) {
-        buffer[(bob.getY() * height) * 2 + bob.getY() + bob.getX() * 2 + 1] = 'B';
+    const std::vector<std::shared_ptr<Bob>> p_bobs = sim.getBobs();
+    for (const std::shared_ptr<Bob> &p_bob: p_bobs) {
+        std::cout << *p_bob << std::endl;
+        buffer[(p_bob->getY() * height) * 2 + p_bob->getY() + p_bob->getX() * 2 + 1] = 'B';
     }
 
     std::cout << buffer << std::endl;
-    std::cout << "Current population: " << sim.getBobs().size() << std::endl;
+    std::cout << "Current population: " << sim.getWorldPopulation() << std::endl;
     std::cout << "Day: " << static_cast<int>(sim.getDay());
     std::cout << " (" << static_cast<int>(sim.getTick()) << "/" << static_cast<int>(sim.TICKS_PER_DAY) << ")" << std::endl;
 }

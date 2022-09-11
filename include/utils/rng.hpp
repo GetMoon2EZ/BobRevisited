@@ -26,6 +26,8 @@ public:
      */
     uint64_t getRandomNumber(uint64_t min, uint64_t max);
 
+    float getRandomFloat(float min, float max);
+
     void Cleanup(void) const;
 
     RandomNumberGenerator(RandomNumberGenerator &other) = delete;

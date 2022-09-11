@@ -3,6 +3,7 @@
 #include <cstdint>
 #include <random>
 
+#include "entities/bob.hpp"
 #include "utils/rng.hpp"
 #include "utils/types.hpp"
 
