@@ -12,18 +12,21 @@
 
 const energy_t Bob::BOB_ENERGY_DEFAULT = (energy_t) 100;
 const energy_t Bob::BOB_ENERGY_MAX = (energy_t) 200;
-const energy_t Bob::REPRODUCTION_COST = (energy_t) 180;
+const energy_t Bob::REPRODUCTION_COST = (energy_t) 100;
 const energy_t Bob::NEW_BORN_ENERGY = (energy_t) 100;
-const float Bob::BOB_VELOCITY_DEFAULT = 1.0F;
+const float Bob::BOB_DEFAULT_VELOCITY = 1.0F;
+const mass_t Bob::BOB_DEFAULT_MASS = 1.0F;
+const float Bob::CANNIBALISM_MASS_RATIO = 2.0/3.0;
 
 Bob::Bob(position_t _x, position_t _y): Entity(_x, _y)
 {}
 
-Bob::Bob(position_t _x, position_t _y, energy_t _energy, float _velocity): Entity(_x, _y)
+Bob::Bob(position_t _x, position_t _y, energy_t _energy, float _velocity, float _mass): Entity(_x, _y)
 {
     this->energyMax = BOB_ENERGY_MAX;
     this->energyLevel = _energy;
     this->velocity = _velocity;
+    this->mass = _mass;
 }
 
 float Bob::Move(dimension_t world_width, dimension_t world_height, float move_amount)
@@ -49,7 +52,7 @@ float Bob::Move(dimension_t world_width, dimension_t world_height, float move_am
     }
 }
 
-void Bob::Eat(std::shared_ptr<Food> p_food, float eat_percentage)
+void Bob::EatFood(std::shared_ptr<Food> p_food, float eat_percentage)
 {
     // Eat movePercentage food from the
     energy_t max_can_eat = this->energyMax - this->energyLevel;
@@ -60,6 +63,23 @@ void Bob::Eat(std::shared_ptr<Food> p_food, float eat_percentage)
     }
     this->energyLevel += p_food->Consume(std::min(max_can_eat, food_energy));
 }
+
+bool Bob::CanEat(std::shared_ptr<Bob> p_bob)
+{
+    return (this->getID() != p_bob->getID()) && ((p_bob->getMass() / this->getMass()) < Bob::CANNIBALISM_MASS_RATIO);
+}
+
+void Bob::EatBob(std::shared_ptr<Bob> p_bob)
+{
+    energy_t _Be = this->energyLevel;
+    energy_t _be = p_bob->getEnergyLevel();
+    mass_t _Bm = this->mass;
+    mass_t _bm = p_bob->getMass();
+    energy_t new_energy = _Be + ((1 / 2.0) * _be) * (1 - (_bm / _Bm));
+
+    this->energyLevel = std::min(new_energy, this->energyMax);
+}
+
 
 void Bob::Reproduce()
 {
@@ -103,7 +123,7 @@ float Bob::MoveRandomly(dimension_t world_width, dimension_t world_height, float
             break;
 
         default:
-            std::cout << "[ERROR] Unknown direction " << static_cast<int>(direction) << std::endl;
+            std::cerr << "[ERROR] Unknown direction " << static_cast<int>(direction) << std::endl;
     }
 
     // Should be 1
@@ -117,13 +137,13 @@ energy_t Bob::CalculateEnergyConsumption(float nb_tiles) const
     }
 
     // Energy = Speed²
-    energy_t energy_consumption = this->velocity * this->velocity;
+    energy_t energy_consumption = this->mass * this->velocity * this->velocity;
     return energy_consumption;
 }
 
 void Bob::Die()
 {
-    std::cout << "[DEBUG] Bob " << this->getID() << " is dead !" << std::endl;
+    // std::cout << "[DEBUG] Bob " << this->getID() << " is dead !" << std::endl;
     this->status = DEAD;
 }
 
@@ -138,8 +158,9 @@ std::ostream& operator<<(std::ostream& out, const Bob& bob)
     out << "\tbob.x = " << static_cast<int>(bob.getX());
     out << "\tbob.y = " << static_cast<int>(bob.getY());
     out << "\tbob.energyLevel = " << bob.getEnergyLevel();
-    out << "\tbob.velocity = " << bob.getVelocity();    
+    out << "\tbob.velocity = " << bob.getVelocity();
     out << "\tbob.movePercentage = " << bob.getMovePercentage();
+    out << "\tbob.mass = " << bob.getMass();
     return out;
 }
 
@@ -180,4 +201,9 @@ float Bob::getVelocity(void) const
 float Bob::getMovePercentage(void) const
 {
     return this->movePercentage;
+}
+
+mass_t Bob::getMass(void) const
+{
+    return this->mass;
 }

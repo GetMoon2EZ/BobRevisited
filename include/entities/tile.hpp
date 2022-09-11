@@ -1,6 +1,7 @@
 #pragma once
 
 #include <memory>
+#include <vector>
 
 #include "utils/types.hpp"
 #include "entities/bob.hpp"
@@ -21,8 +22,13 @@ public:
     void setPFood(std::shared_ptr<Food> p_food);
     std::shared_ptr<Food> getPFood(void) const;
 
+    void AddBob(std::shared_ptr<Bob> p_bob);
+    void RemoveBob(std::shared_ptr<Bob> p_bob);
+    std::vector<std::shared_ptr<Bob>> getPBobs(void) const;
+
     ~Tile() = default;
 
 private:
     std::shared_ptr<Food> pFood = nullptr;
+    std::vector<std::shared_ptr<Bob>> pBobs;
 };

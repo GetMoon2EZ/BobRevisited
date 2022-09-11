@@ -15,7 +15,10 @@ public:
     static const energy_t BOB_ENERGY_MAX;
     static const energy_t REPRODUCTION_COST;
     static const energy_t NEW_BORN_ENERGY;
-    static const float BOB_VELOCITY_DEFAULT;
+    static const float BOB_DEFAULT_VELOCITY;
+    static const mass_t BOB_DEFAULT_MASS;
+    static const float CANNIBALISM_MASS_RATIO;
+
 
     typedef enum {
         ALIVE,
@@ -42,7 +45,7 @@ public:
 
     Bob() = default;
     Bob(position_t x, position_t y);
-    Bob(position_t x, position_t y, energy_t energy, float velocity);
+    Bob(position_t x, position_t y, energy_t energy, float velocity, float mass);
 
     /**
      * @brief Try to move through "move_amount" tiles in the world
@@ -60,7 +63,9 @@ public:
      * @param food Food to eat (must be in the same tile)
      * @param EatPercentage Percentage of the available food to eat [0-100]
      */
-    void Eat(std::shared_ptr<Food> p_food, float eat_percentage);
+    void EatFood(std::shared_ptr<Food> p_food, float eat_percentage);
+    bool CanEat(std::shared_ptr<Bob> p_bob);
+    void EatBob(std::shared_ptr<Bob> p_bob);
     void Reproduce();
     energy_t CalculateEnergyConsumption(float nb_tiles) const;
     void Die();
@@ -71,6 +76,7 @@ public:
     REPRODUCTION_MODE getReproductionMode(void) const;
     float getVelocity(void) const;
     float getMovePercentage(void) const;
+    mass_t getMass(void) const;
 
     void setEnergyLevel(energy_t new_level);
 
@@ -88,33 +94,10 @@ private:
     MOVE_HEURISTIC moveHeuristic = MOVE_HEURISTIC_RANDOM;
     REPRODUCTION_MODE reproductionMode = PARTHENOGENESIS;
 
-    /*
-    Solution 1:
-        * velocity member value which indicates bob's velocity
-        * precise_x and precise_y which indicate bob's position with precision
-    For each tick:
-        * Call bob.Move
-            * If precise position is not INTEGERS (ie: bob is between 2 tiles)
-                * Consume the rest of the tile
-            * Else
-                * Move normally
-    
-    Solution 2:
-        * velocity member value which indicates bob's velocity
-        * move_percentage
-    For each tick:
-        * Call bob.Move(move_amount)
-            * if (move_percentage != 100)
-                * EAT move_percentage
-                * move_percentage = 100
-                * return old_move_percentage
-            * else
-            *   * move
-    */
-    float velocity = BOB_VELOCITY_DEFAULT;
+    float velocity = BOB_DEFAULT_VELOCITY;
     float movePercentage = 100;
 
-    float size = 1;
+    mass_t mass = BOB_DEFAULT_MASS;
     uint8_t memory = 0;
 
     float MoveRandomly(dimension_t worldWidth, dimension_t worldHeight, float move_amount);

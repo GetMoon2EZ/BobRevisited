@@ -43,7 +43,6 @@ void ConsoleDisplay::DisplayFrame(Simulation sim)
     // Draw a B for each bob in the grid
     const std::vector<std::shared_ptr<Bob>> p_bobs = sim.getBobs();
     for (const std::shared_ptr<Bob> &p_bob: p_bobs) {
-        std::cout << *p_bob << std::endl;
         buffer[(p_bob->getY() * height) * 2 + p_bob->getY() + p_bob->getX() * 2 + 1] = 'B';
     }
 

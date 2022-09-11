@@ -26,9 +26,10 @@ const dimension_t Simulation::DEFAULT_WORLD_HEIGHT = 100;
 const uint64_t Simulation::DEFAULT_WORLD_POPULATION = 100;
 const std::chrono::milliseconds Simulation::TICK_DURATION_MS = std::chrono::milliseconds( 200 );
 const uint8_t Simulation::TICKS_PER_DAY = 100;
-const uint16_t Simulation::FOOD_PER_DAY = 100;
+const uint16_t Simulation::FOOD_PER_DAY = 300;
 
 const float Simulation::VELOCITY_MUTATION_RATE = 0.0F; 
+const mass_t Simulation::MASS_MUTATION_RATE = 0.1F;
 
 /*****************************/
 /*       Constructors        */
@@ -71,6 +72,7 @@ int Simulation::Init(uint64_t _worldPopulation)
         getRandomCoordinates(this->worldWidth, this->worldHeight, &bob_x, &bob_y);
         std::shared_ptr<Bob> p_bob = std::make_shared<Bob>(bob_x, bob_y);
         if (p_bob) {
+            this->tiles[bob_x][bob_y].AddBob(p_bob);
             this->bobs.push_back(std::move(p_bob));
             std::cout << "[DEBUG] " << *(this->bobs[i]) << std::endl;
         }
@@ -124,6 +126,8 @@ void Simulation::RunTick()
 
     this->UpdateBobsPositions();
 
+    this->CheckBobCannibalism();
+
     // Cleanup dead or empty entities
     this->CleanupDeadBobs();
     this->CleanupEmptyFoods();
@@ -144,6 +148,8 @@ void Simulation::UpdateBobsPositions()
     for (std::shared_ptr<Bob> p_bob: this->bobs) {
         if (!p_bob)
             continue;
+        // Save position
+        position_t old_x = p_bob->getX(), old_y = p_bob->getY();
         // Total amount moved, needed for energy consumption calculation
         float total_moved = 0;
         // Maximum number of moves (equal to velocity)
@@ -164,12 +170,16 @@ void Simulation::UpdateBobsPositions()
             // If there is food on the tile then eat it
             std::shared_ptr<Food> p_food = new_tile.getPFood();
             if (p_food != nullptr) {
-                p_bob->Eat(p_food, moved * 100);
+                p_bob->EatFood(p_food, moved * 100);
             }
 
             total_moved += moved;
             nb_move -= move_amount;
         }
+
+        // Update tiles bob arrays
+        this->tiles[old_x][old_y].RemoveBob(p_bob);
+        this->tiles[p_bob->getX()][p_bob->getY()].AddBob(p_bob);
 
         // std::cout << "[DEBUG] " << *p_bob << std::endl;
         this->CheckBobReproduction(p_bob);
@@ -182,7 +192,7 @@ void Simulation::UpdateBobsPositions()
         if (consumed < p_bob->getEnergyLevel()) {
             p_bob->setEnergyLevel(p_bob->getEnergyLevel() - consumed);
         } else {
-            p_bob->Die();
+            this->Kill(p_bob);
         }
     }
 }
@@ -199,16 +209,38 @@ void Simulation::CheckBobReproduction(std::shared_ptr<Bob> p_bob)
             if (p_bob->getEnergyLevel() == p_bob->getEnergyMax()) {
                 p_bob->Reproduce();
                 float velocity = rng->getRandomFloat(p_bob->getVelocity() - VELOCITY_MUTATION_RATE, p_bob->getVelocity() + VELOCITY_MUTATION_RATE);
-                std::cout << "[DEBUG] New BOB spawned from bob " << p_bob->getID() << std::endl; 
-                std::shared_ptr<Bob> p_new_bob = std::make_shared<Bob>(p_bob->getX(), p_bob->getY(), Bob::NEW_BORN_ENERGY, velocity);
-                if (p_new_bob)
+                mass_t mass = rng->getRandomFloat(p_bob->getMass() - MASS_MUTATION_RATE, p_bob->getMass() + MASS_MUTATION_RATE);
+                // std::cout << "[DEBUG] New BOB spawned from bob " << p_bob->getID() << std::endl; 
+                std::shared_ptr<Bob> p_new_bob = std::make_shared<Bob>(p_bob->getX(), p_bob->getY(), Bob::NEW_BORN_ENERGY, velocity, mass);
+                if (p_new_bob) {
+                    this->tiles[p_new_bob->getX()][p_new_bob->getY()].AddBob(p_new_bob);
                     this->bobs.push_back(std::move(p_new_bob));
+                }
             }
             break;
     }
 
     // Update world population
     this->worldPopulation = this->bobs.size();
+}
+
+void Simulation::CheckBobCannibalism()
+{
+    for (std::shared_ptr<Bob> p_bob_l: this->bobs) {
+        Tile tile = this->tiles[p_bob_l->getX()][p_bob_l->getY()];
+        for (std::shared_ptr<Bob> p_bob_s: tile.getPBobs()) {
+            if (p_bob_l->CanEat(p_bob_s)) {
+                p_bob_l->EatBob(p_bob_s);
+                this->Kill(p_bob_s);
+            }
+        }
+    }
+}
+
+void Simulation::Kill(std::shared_ptr<Bob> p_bob)
+{
+    this->tiles[p_bob->getX()][p_bob->getY()].RemoveBob(p_bob);
+    p_bob->Die();
 }
 
 void Simulation::CleanupDeadBobs()

@@ -23,6 +23,7 @@ public:
     static const uint16_t FOOD_PER_DAY;
 
     static const float VELOCITY_MUTATION_RATE; 
+    static const mass_t MASS_MUTATION_RATE;
 
     enum {
         SIMULATION_SUCCESS = 0,
@@ -62,6 +63,8 @@ private:
 
     void RunTick();
     void UpdateBobsPositions();
+    void CheckBobCannibalism();
+    void Kill(std::shared_ptr<Bob> p_bob);
     void CheckBobReproduction(std::shared_ptr<Bob> bob);
     void CleanupDeadBobs();
     void CleanupEmptyFoods();
